@@ -1,0 +1,28 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: aws-ckad
+  version: "1.27"
+  region: us-west-2
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+  - metadata:
+      name: ebs-csi-controller-sa
+      namespace: kube-system
+    attachPolicyARNs:
+    - "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+    roleOnly: true
+    roleName: eksctl-ebs-csi-driver-role-aws-ckad
+
+addons:
+- name: aws-ebs-csi-driver
+  version: v1.27.0-eksbuild.1
+  serviceAccountRoleARN: arn:aws:iam::ACCT_NUMBER:role/eksctl-ebs-csi-driver-role-aws-ckad
+
+nodeGroups:
+  - name: aws-ckad-nodegroup1
+    instanceType: m5a.2xlarge
+    desiredCapacity: 3 

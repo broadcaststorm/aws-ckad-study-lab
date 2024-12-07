@@ -1,0 +1,49 @@
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 20.0"
+
+  cluster_name    = "${var.scenario_name}_eks"
+  cluster_version = "1.30"
+
+  cluster_endpoint_public_access = false
+
+  cluster_addons = {
+    coredns                = {}
+    eks-pod-identity-agent = {}
+    kube-proxy             = {}
+    vpc-cni                = {}
+  }
+
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+
+  # EKS Managed Node Group(s)
+  eks_managed_node_group_defaults = {
+    instance_types = [
+      "t4g.xlarge",
+      "t3a.xlarge",
+      "t3.xlarge",
+      "m5a.xlarge"
+    ]
+  }
+
+  eks_managed_node_groups = {
+    scenario_nodes = {
+      ami_id         = data.aws_ami.ubuntu_22_04.id
+      instance_types = ["t4g.xlarge"]
+
+      min_size     = 1
+      max_size     = 4
+      desired_size = 2
+    }
+  }
+
+  # Cluster access entry
+  # To add the current caller identity as an administrator
+  enable_cluster_creator_admin_permissions = true
+
+  tags = {
+    Terraform = "true"
+    Scenario  = "${var.scenario_name}"
+  }
+}
